@@ -13,6 +13,6 @@ If you want to run the import process, you should use the command: `php app/cons
 ### Test mode ###
 If you want to run the import process in test mode, you should use the command: `php app/console import:csv *path to your csv file* --test`. For example, `php app/console import:csv /home/andrey/Загрузки/stock.csv --test`
 
-### Run test for the ImportCSVService class###
+### Run test for the ImportCSVService class ###
 `./vendor/bin/simple-phpunit -c app src/AppBundle/Tests/Service/ImportCSVServiceTest.php`
 
