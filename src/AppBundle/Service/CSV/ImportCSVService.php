@@ -2,31 +2,36 @@
 
 namespace AppBundle\Service\CSV;
 
+use AppBundle\DTO\ProductDataDTO;
 use AppBundle\Entity\ProductData;
+use AppBundle\Service\Validator\CustomValidator;
 use Doctrine\ORM\EntityManager;
-use ParseCsv;
+use ParseCsv\Csv;
 use Exception;
+use Symfony\Component\Serializer\Serializer;
 
 class ImportCSVService
 {
-    /**
-     * @var EntityManager
-     */
     private $entityManager;
 
-    /**
-     * @var ParseCsv\Csv
-     */
     private $csv;
 
+    private $validator;
+
+    private $serializer;
+
     /**
-     * ImportCSVService constructor.
-     * @param EntityManager $entityManager
+     * @var ImportCSVReport
      */
-    public function __construct(EntityManager $entityManager)
+    private $report;
+
+    public function __construct(EntityManager $entityManager, CustomValidator $validator, Csv $csv, Serializer $serializer)
     {
         $this->entityManager = $entityManager;
-        $this->csv = new ParseCsv\Csv();
+        $this->csv = $csv;
+        $this->validator = $validator;
+        $this->serializer = $serializer;
+        $this->report = new ImportCSVReport();
     }
 
     /**
@@ -39,47 +44,36 @@ class ImportCSVService
         $this->csv->parse($path);
         $rows = $this->csv->data;
 
-        $report = new ImportCSVReport();
-
         foreach ($rows as $row) {
             try {
-                $report->increaseProcessed();
+                $this->report->increaseProcessed();
 
-                [
-                    'Product Code' => $productCode,
-                    'Product Name' => $productName,
-                    'Product Description' => $productDescription,
-                    'Stock' => $stock,
-                    'Cost in GBP' => $costGBP,
-                    'Discontinued' => $discontinued
-                ] = $row;
+                /** @var ProductDataDTO $productDataDTO */
+                $productDataDTO = $this->serializer->denormalize($row, ProductDataDTO::class);
+                $this->validator->validate($productDataDTO);
+
                 $productData = new ProductData(
-                    $productCode,
-                    $productName,
-                    $productDescription,
-                    (int)$stock,
-                    (float)trim($costGBP, '$'), //remove $
-                    $discontinued
+                    $productDataDTO->productCode,
+                    $productDataDTO->productName,
+                    $productDataDTO->productDescription,
+                    $productDataDTO->stock,
+                    $productDataDTO->costGBP,
+                    $productDataDTO->discontinued
                 );
+                $this->validator->validate($productData);
 
                 if ($testMode) {   //if enabled test mode, we don't import the products.
                     continue;
-                }
-
-                if (!$this->entityManager->isOpen()) {  //it's necessary for Symfony 2:  https://stackoverflow.com/questions/14258591/the-entitymanager-is-closed
-                    $this->entityManager = $this->entityManager->create(
-                        $this->entityManager->getConnection(),
-                        $this->entityManager->getConfiguration()
-                    );
                 }
 
                 $this->entityManager->persist($productData);
                 $this->entityManager->flush();
             } catch (Exception $e) {
                 $product = implode($this->csv->delimiter, $row);
-                $report->addError($e->getMessage(), $product);
+                $this->report->addError($e->getMessage(), $product);
             }
         }
-        return $report;
+
+        return $this->report;
     }
 }

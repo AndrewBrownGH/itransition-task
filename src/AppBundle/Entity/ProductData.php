@@ -1,16 +1,18 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use Exception;
+
 use DateTime;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * ProductData
  *
  * @ORM\Table(name="tblProductData")
  * @ORM\Entity(repositoryClass="AppBundle\Repository\ProductDataRepository")
+ * @UniqueEntity("productCode", message="Product code is already used")
  */
 class ProductData
 {
@@ -21,257 +23,155 @@ class ProductData
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $intProductDataId;
+    private $productDataId;
 
     /**
      * @var string
      *
      * @ORM\Column(name="strProductCode", type="string", length=10, unique=true)
      */
-    private $strProductCode;
+    private $productCode;
+
     /**
      * @var string
      *
      * @ORM\Column(name="strProductName", type="string", length=50)
      */
-    private $strProductName;
+    private $productName;
 
     /**
      * @var string
      *
      * @ORM\Column(name="strProductDesc", type="string", length=255)
      */
-    private $strProductDesc;
+    private $productDescription;
+
     /**
      * @var int
      *
      * @ORM\Column(name="intStock", type="integer")
      */
-    private $intStock;
+    private $stock;
 
     /**
-     * @var string
+     * @var float
      *
      * @ORM\Column(name="decimalCostGBP", type="decimal", precision=5, scale=2)
      */
-    private $decimalCostGBP;
+    private $costGBP;
 
     /**
      * @var DateTime
      *
      * @ORM\Column(name="dtmAdded", type="datetime", nullable=true)
      */
-    private $dtmAdded;
+    private $createdAt;
 
     /**
      * @var DateTime
      *
      * @ORM\Column(name="dtmDiscontinued", type="datetime", nullable=true)
      */
-    private $dtmDiscontinued;
+    private $discontinued;
 
     public function __construct(
-        string $strProductCode,
-        string $strProductName,
-        string $strProductDesc,
-        int $intStock,
-        float $decimalCostGBP,
-        string $dtmDiscontinued
+        string $productCode,
+        string $productName,
+        string $productDescription,
+        int $stock,
+        float $costGBP,
+        bool $discontinued
     )
     {
-        if ($decimalCostGBP < 5 && $intStock < 10) {
-            throw new Exception('The product costs less that $5 and has less than 10 stock');
-        }
-        if ($decimalCostGBP > 1000) {
-            throw new Exception('The product cost over $1000');
-        }
-
-        $this->strProductCode = $strProductCode;
-        $this->strProductName = $strProductName;
-        $this->strProductDesc = $strProductDesc;
-        $this->intStock = $intStock;
-        $this->decimalCostGBP = $decimalCostGBP;
-        $this->dtmDiscontinued = $dtmDiscontinued === 'yes' ? new DateTime() : null;
-        $this->dtmAdded = new DateTime();
+        $this->productCode = $productCode;
+        $this->productName = $productName;
+        $this->productDescription = $productDescription;
+        $this->stock = $stock;
+        $this->costGBP = $costGBP;
+        $this->discontinued = $discontinued === true ? new DateTime() : null;
+        $this->createdAt = new DateTime();
     }
 
-    /**
-     * Get id
-     *
-     * @return int
-     */
-    public function getIntProductDataId()
+    public function getProductDataId(): int
     {
-        return $this->intProductDataId;
+        return $this->productDataId;
     }
 
-
-    /**
-     * Set strProductName
-     *
-     * @param string $strProductName
-     *
-     * @return ProductData
-     */
-    public function setStrProductName($strProductName)
+    public function setProductName(string $productName): ProductData
     {
-        $this->strProductName = $strProductName;
-
+        $this->productName = $productName;
         return $this;
     }
 
-    /**
-     * Get strProductName
-     *
-     * @return string
-     */
-    public function getStrProductName()
+    public function getProductName(): string
     {
-        return $this->strProductName;
+        return $this->productName;
     }
 
-    /**
-     * Set strProductDesc
-     *
-     * @param string $strProductDesc
-     *
-     * @return ProductData
-     */
-    public function setStrProductDesc($strProductDesc)
+    public function setProductDescription(string $productDescription): ProductData
     {
-        $this->strProductDesc = $strProductDesc;
-
+        $this->productDescription = $productDescription;
         return $this;
     }
 
-    /**
-     * Get strProductDesc
-     *
-     * @return string
-     */
-    public function getStrProductDesc()
+    public function getProductDescription(): string
     {
-        return $this->strProductDesc;
+        return $this->productDescription;
     }
 
-    /**
-     * Set strProductCode
-     *
-     * @param string $strProductCode
-     *
-     * @return ProductData
-     */
-    public function setStrProductCode($strProductCode)
+    public function setProductCode(string $productCode): ProductData
     {
-        $this->strProductCode = $strProductCode;
-
+        $this->productCode = $productCode;
         return $this;
     }
 
-    /**
-     * Get strProductCode
-     *
-     * @return string
-     */
-    public function getStrProductCode()
+    public function getProductCode(): string
     {
-        return $this->strProductCode;
+        return $this->productCode;
     }
 
-    /**
-     * Set dtmAdded
-     *
-     * @param \DateTime $dtmAdded
-     *
-     * @return ProductData
-     */
-    public function setDtmAdded($dtmAdded)
+    public function setCreatedAt(DateTime $createdAt): ProductData
     {
-        $this->dtmAdded = $dtmAdded;
-
+        $this->createdAt = $createdAt;
         return $this;
     }
 
-    /**
-     * Get dtmAdded
-     *
-     * @return \DateTime
-     */
-    public function getDtmAdded()
+    public function getCreatedAt(): DateTime
     {
-        return $this->dtmAdded;
+        return $this->createdAt;
     }
 
-    /**
-     * Set dtmDiscontinued
-     *
-     * @param \DateTime $dtmDiscontinued
-     *
-     * @return ProductData
-     */
-    public function setDtmDiscontinued($dtmDiscontinued)
+    public function setDiscontinued(DateTime $discontinued): ProductData
     {
-        $this->dtmDiscontinued = $dtmDiscontinued;
-
+        $this->discontinued = $discontinued;
         return $this;
     }
 
-    /**
-     * Get dtmDiscontinued
-     *
-     * @return \DateTime
-     */
-    public function getDtmDiscontinued()
+    public function getDiscontinued(): DateTime
     {
-        return $this->dtmDiscontinued;
+        return $this->discontinued;
     }
 
-    /**
-     * Set intStock
-     *
-     * @param integer $intStock
-     *
-     * @return ProductData
-     */
-    public function setIntStock($intStock)
+    public function getStock(): int
     {
-        $this->intStock = $intStock;
+        return $this->stock;
+    }
 
+    public function setStock(int $stock): ProductData
+    {
+        $this->stock = $stock;
         return $this;
     }
 
-    /**
-     * Get intStock
-     *
-     * @return int
-     */
-    public function getIntStock()
+    public function getCostGBP(): float
     {
-        return $this->intStock;
+        return $this->costGBP;
     }
 
-    /**
-     * Set decimalCostGBP
-     *
-     * @param string $decimalCostGBP
-     *
-     * @return ProductData
-     */
-    public function setDecimalCostGBP($decimalCostGBP)
+    public function setCostGBP(float $costGBP): ProductData
     {
-        $this->decimalCostGBP = $decimalCostGBP;
-
+        $this->costGBP = $costGBP;
         return $this;
-    }
-
-    /**
-     * Get decimalCostGBP
-     *
-     * @return string
-     */
-    public function getDecimalCostGBP()
-    {
-        return $this->decimalCostGBP;
     }
 }
 

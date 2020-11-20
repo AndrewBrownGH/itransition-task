@@ -8,5 +8,6 @@
 /app/phpunit.xml
 /build/
 /vendor/
-/bin/
+/vendor/bin/
 /composer.phar
+/app/.phpunit.result.cache

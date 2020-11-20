@@ -39,7 +39,8 @@ class ImportCSVCommand extends ContainerAwareCommand
         $output->writeln('skipped items: ' . '<info>' . $report->getCountErrors() . '</info>');
 
         foreach ($errors as $error) {
-            $output->writeln('<fire>' . $error['message'] . ': ' . $error['product'] . '</fire>');
+            $output->writeln('<comment>' . $error['message'] . '</comment>');
+            $output->writeln('<fire>' . $error['product'] . '</fire>' . PHP_EOL);
         }
     }
 }
