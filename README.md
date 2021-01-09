@@ -3,7 +3,7 @@ You need to create a mechanism which will read the CSV file, parse the contents 
 the data into a MySQL database table.
 The import process will be run from the command line and when it completes it needs to
 report how many items were processed, how many were successful, and how many were
-skipped. See the import rules below.
+skipped.
 
 ### Objectives ###
 Your solution must be OO, based on Symfony 2 and use MySQL. Code should be clearly laid out, well commented.
