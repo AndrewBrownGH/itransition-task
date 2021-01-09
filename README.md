@@ -27,10 +27,13 @@ I created 2 migrations: the first migration creates the table, the second migrat
 
 ### Start the process ###
 
-If you want to run the import process, you should use the command: `php app/console import:csv *path to your csv file*`. For example, `php app/console import: csv /home/andrey/Загрузки/stock.csv`
+If you want to run the import process, you should use the command: `php app/console import:csv *path to your csv file*`. For example, `php app/console import:csv /home/andrey/Загрузки/stock.csv`
+
+### Delimiter ###
+You can add any valid delimiter (it's optional). If you don't add a delimiter, the delimiter will be auto-detect: `php app/console import:csv *path to your csv file* *delimiter*`. For example, `php app/console import:csv /home/andrey/Загрузки/stock.csv '\t''`
 
 ### Test mode ###
-If you want to run the import process in test mode, you should use the command: `php app/console import:csv *path to your csv file* --test`. For example, `php app/console import:csv /home/andrey/Загрузки/stock.csv --test`
+Test mode shows you stats without import products: `php app/console import:csv *path to your csv file* --test`. For example, `php app/console import:csv /home/andrey/Загрузки/stock.csv --test`
 
 ### Run test for the ImportCSVService class ###
 `./vendor/bin/simple-phpunit -c app src/AppBundle/Tests/Service/ImportCSVServiceTest.php`

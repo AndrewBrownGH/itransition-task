@@ -12,6 +12,8 @@ use Symfony\Component\Serializer\Serializer;
 
 class ImportCSVService
 {
+    private const VALID_DELIMITERS = [',', ' ', '\t', '\n', '\r'];
+
     private $entityManager;
 
     private $csv;
@@ -34,15 +36,9 @@ class ImportCSVService
         $this->report = new ImportCSVReport();
     }
 
-    /**
-     * @param string $path
-     * @param bool $testMode
-     * @return ImportCSVReport
-     */
-    public function import(string $path, bool $testMode = false): ImportCSVReport
+    public function import(string $path, string $delimiter = null, bool $testMode = false): ImportCSVReport
     {
-        $this->csv->parse($path);
-        $rows = $this->csv->data;
+        $rows = $this->parse($path, $delimiter);
 
         foreach ($rows as $row) {
             try {
@@ -62,7 +58,7 @@ class ImportCSVService
                 );
                 $this->validator->validate($productData);
 
-                if ($testMode) {   //if enabled test mode, we don't import the products.
+                if ($testMode) {   //if enabled test mode, we won't import the products.
                     continue;
                 }
 
@@ -75,5 +71,17 @@ class ImportCSVService
         }
 
         return $this->report;
+    }
+
+    private function parse(string $path, ?string $delimiter): array
+    {
+        if (in_array($delimiter, self::VALID_DELIMITERS)) {
+            $this->csv->delimiter = $delimiter;
+            $this->csv->parse($path);
+        } else {
+            $this->csv->auto($path);
+        }
+
+        return $this->csv->data;
     }
 }
