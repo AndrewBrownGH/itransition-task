@@ -141,9 +141,9 @@ class ProductData
         return $this->createdAt;
     }
 
-    public function setDiscontinued(DateTime $discontinued): ProductData
+    public function setDiscontinued(bool $discontinued): ProductData
     {
-        $this->discontinued = $discontinued;
+        $this->discontinued = $discontinued === true ? new DateTime() : null;;
         return $this;
     }
 

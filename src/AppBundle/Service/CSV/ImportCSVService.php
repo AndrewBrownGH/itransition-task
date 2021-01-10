@@ -30,33 +30,26 @@ class ImportCSVService
     public function __construct(EntityManager $entityManager, CustomValidator $validator, Csv $csv, Serializer $serializer)
     {
         $this->entityManager = $entityManager;
-        $this->csv = $csv;
         $this->validator = $validator;
+        $this->csv = $csv;
         $this->serializer = $serializer;
         $this->report = new ImportCSVReport();
     }
 
     public function import(string $path, string $delimiter = null, bool $testMode = false): ImportCSVReport
     {
-        $rows = $this->parse($path, $delimiter);
+        $products = $this->parse($path, $delimiter);
 
-        foreach ($rows as $row) {
+        foreach ($products as $product) {
             try {
                 $this->report->increaseProcessed();
 
-                /** @var ProductDataDTO $productDataDTO */
-                $productDataDTO = $this->serializer->denormalize($row, ProductDataDTO::class);
-                $this->validator->validate($productDataDTO);
+                $productDataDTO = $this->createProductDataDTO($product);
+                $isExistProduct = $this->isExistProduct($productDataDTO->productCode);
 
-                $productData = new ProductData(
-                    $productDataDTO->productCode,
-                    $productDataDTO->productName,
-                    $productDataDTO->productDescription,
-                    $productDataDTO->stock,
-                    $productDataDTO->costGBP,
-                    $productDataDTO->discontinued
-                );
-                $this->validator->validate($productData);
+                $productData = $isExistProduct === true
+                    ? $this->updateProductData($productDataDTO)
+                    : $this->createProductData($productDataDTO);
 
                 if ($testMode) {   //if enabled test mode, we won't import the products.
                     continue;
@@ -65,7 +58,7 @@ class ImportCSVService
                 $this->entityManager->persist($productData);
                 $this->entityManager->flush();
             } catch (Exception $e) {
-                $product = implode($this->csv->delimiter, $row);
+                $product = implode($this->csv->delimiter, $product);
                 $this->report->addError($e->getMessage(), $product);
             }
         }
@@ -83,5 +76,50 @@ class ImportCSVService
         }
 
         return $this->csv->data;
+    }
+
+    private function createProductDataDTO(array $row): ProductDataDTO
+    {
+        /**
+         * @var ProductDataDTO $productDataDTO
+         */
+        $productDataDTO = $this->serializer->denormalize($row, ProductDataDTO::class);
+        $this->validator->validate($productDataDTO);
+
+        return $productDataDTO;
+    }
+
+    private function createProductData(ProductDataDTO $productDataDTO): ProductData
+    {
+        return new ProductData(
+            $productDataDTO->productCode,
+            $productDataDTO->productName,
+            $productDataDTO->productDescription,
+            $productDataDTO->stock,
+            $productDataDTO->costGBP,
+            $productDataDTO->discontinued
+        );
+    }
+
+    private function updateProductData(ProductDataDTO $productDataDTO): ProductData
+    {
+        $product = $this->entityManager->getRepository(ProductData::class)
+            ->findProductByCode($productDataDTO->productCode);
+
+        $product->setProductName($productDataDTO->productName);
+        $product->setProductDescription($productDataDTO->productDescription);
+        $product->setStock($productDataDTO->stock);
+        $product->setCostGBP($productDataDTO->costGBP);
+        $product->setDiscontinued($productDataDTO->discontinued);
+
+        return $product;
+    }
+
+    private function isExistProduct($productCode): bool
+    {
+        $product = $this->entityManager->getRepository(ProductData::class)
+            ->findProductByCode($productCode);
+
+        return null !== $product;
     }
 }
